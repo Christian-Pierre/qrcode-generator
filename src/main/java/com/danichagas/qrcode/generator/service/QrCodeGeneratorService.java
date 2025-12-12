@@ -1,7 +1,7 @@
-package com.danichagas.qrcode.generator.services;
+package com.danichagas.qrcode.generator.service;
 
 import com.danichagas.qrcode.generator.dto.QrCodeGenerateResponse;
-import com.danichagas.qrcode.generator.ports.StoragePort;
+import com.danichagas.qrcode.generator.storage.StoragePort;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.WriterException;
 import com.google.zxing.client.j2se.MatrixToImageWriter;

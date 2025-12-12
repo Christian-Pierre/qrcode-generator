@@ -1,5 +1,6 @@
 package com.danichagas.qrcode.generator.dto;
 
-public record QrCodeGenerateResponse(String url) {
-
+public record QrCodeGenerateResponse(
+    String url
+) {
 }

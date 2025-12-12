@@ -2,7 +2,7 @@ package com.danichagas.qrcode.generator.controller;
 
 import com.danichagas.qrcode.generator.dto.QrCodeGenerateRequest;
 import com.danichagas.qrcode.generator.dto.QrCodeGenerateResponse;
-import com.danichagas.qrcode.generator.services.QrCodeGeneratorService;
+import com.danichagas.qrcode.generator.service.QrCodeGeneratorService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
