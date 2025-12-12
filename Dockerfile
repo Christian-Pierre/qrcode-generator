@@ -1,17 +1,13 @@
-FROM maven:3.9.6-eclipse-temurin-21 AS build
+# Stage 1: build
+FROM maven:3.9-eclipse-temurin-21 AS build
 WORKDIR /app
 COPY pom.xml .
 COPY src ./src
 RUN mvn clean package -DskipTests
 
+# Stage 2: runtime
 FROM eclipse-temurin:21-jre
 WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
-
-ARG AWS_ACCESS_KEY_ID
-ARG AWS_SECRET_ACCESS_KEY
-
-ENV AWS_REGION=us-east-2
-ENV AWS_BUCKET_NAME=qrcode-chagas
-
-ENTRYPOINT ["java", "-jar", "app.jar"]
+EXPOSE 8080
+ENTRYPOINT ["java","-jar","/app/app.jar"]

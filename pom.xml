@@ -31,12 +31,23 @@
         <google.zxing.vesion>3.5.2</google.zxing.vesion>
         <aws.sdk.version>2.24.12</aws.sdk.version>
 	</properties>
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+			<groupId>software.amazon.awssdk</groupId>
+			<artifactId>bom</artifactId>
+			<version>${aws.sdk.version}</version>
+			<type>pom</type>
+			<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
 		</dependency>
-
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-devtools</artifactId>
@@ -48,25 +59,30 @@
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
-
-
-        <dependency>
-            <groupId>software.amazon.awssdk</groupId>
-            <artifactId>s3</artifactId>
-            <version>${aws.sdk.version}</version>
-        </dependency>
+		<dependency>
+			<groupId>software.amazon.awssdk</groupId>
+			<artifactId>s3</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>software.amazon.awssdk</groupId>
+			<artifactId>auth</artifactId>
+		</dependency>
 
         <dependency>
             <groupId>com.google.zxing</groupId>
             <artifactId>core</artifactId>
             <version>${google.zxing.vesion}</version>
         </dependency>
-
         <dependency>
             <groupId>com.google.zxing</groupId>
             <artifactId>javase</artifactId>
             <version>${google.zxing.vesion}</version>
         </dependency>
+		<dependency>
+			<groupId>org.springdoc</groupId>
+			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+			<version>2.5.0</version>
+		</dependency>
 	</dependencies>
 
 	<build>
