@@ -1,116 +1,206 @@
 # QR Code Generator
 
 ![Java](https://img.shields.io/badge/Java-21-orange)
-![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.4.4-brightgreen)
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.4.x-brightgreen)
 ![AWS SDK](https://img.shields.io/badge/AWS%20SDK-2.24.12-yellow)
 ![Google ZXing](https://img.shields.io/badge/Google%20ZXing-3.5.2-blue)
 ![Docker](https://img.shields.io/badge/Docker-✓-blue)
-![Maven](https://img.shields.io/badge/Maven-3.9.6-red)
+![Maven](https://img.shields.io/badge/Maven-3.9.x-red)
 
-A Spring Boot application that generates QR codes and stores them in AWS S3. This project demonstrates the integration of Google's ZXing library for QR code generation and AWS S3 for storage.
+A Spring Boot application that generates QR Codes from text input and stores them in an **S3-compatible object storage**.
+By default, the project runs **locally using MinIO via Docker Compose**, without requiring an AWS account.
+
+The project demonstrates:
+
+* QR Code generation using **Google ZXing**
+* Storage abstraction via a simple `StoragePort`
+* S3-compatible storage using **MinIO**
+* Easy local setup using **Docker Compose**
+
+---
 
 ## Table of Contents
 
-- [How to Use](#how-to-use)
-    - [Prerequisites](#prerequisites)
-    - [Environment Variables](#environment-variables)
-    - [Running the Application](#running-the-application)
-        - [Local Development](#local-development)
-        - [Docker Deployment](#docker-deployment)
-    - [AWS S3 Configuration](#aws-s3-configuration)
-- [Application Flow](#application-flow)
-- [API Endpoints](#api-endpoints)
-- [License](#license)
+* [How to Use](#how-to-use)
+
+  * [Prerequisites](#prerequisites)
+  * [Running the Application](#running-the-application)
+
+    * [Docker (Recommended)](#docker-recommended)
+    * [Local Development](#local-development)
+* [Configuration](#configuration)
+* [Application Flow](#application-flow)
+* [API Endpoints](#api-endpoints)
+* [License](#license)
+
+---
 
 ## How to Use
 
-This section provides comprehensive instructions for setting up and running the QR Code Generator application.
-
 ### Prerequisites
 
-- Java 21 JDK
-- Maven
-- Docker
-- AWS Account with S3 access
-- AWS CLI configured with appropriate credentials
+* Docker & Docker Compose
+* (Optional) Java 21 and Maven — only required for local development without Docker
 
-### Environment Variables
+> ❗ You **do not need an AWS account** to run this project locally.
 
-Create a `.env` file in the project root with the following variables:
+---
 
-```env
-AWS_ACCESS_KEY_ID=your_access_key
-AWS_SECRET_ACCESS_KEY=your_secret_key
-AWS_REGION=your_region
-AWS_BUCKET_NAME=your_bucket_name
+## Running the Application
+
+### Docker (Recommended)
+
+This is the **simplest and recommended way** to run the application.
+
+The Docker Compose setup includes:
+
+* The Spring Boot application
+* A MinIO instance (S3-compatible storage)
+* Automatic bucket creation and public access configuration
+
+#### 1️⃣ Build and start everything
+
+```bash
+docker compose up --build
 ```
 
-### Running the Application
+#### 2️⃣ Verify services
 
-#### Local Development
+* Application: [http://localhost:8080](http://localhost:8080)
+* MinIO Console: [http://localhost:9001](http://localhost:9001)
 
-1. Create the `.env` file as described above
-2. Build the project:
-   ```bash
-   mvn clean package
-   ```
-3. Run the application:
-   ```bash
-   mvn spring-boot:run
-   ```
+  * User: `minioadmin`
+  * Password: `minioadmin`
 
-#### Docker Deployment
+---
 
-1. Build the Docker image:
-   ```bash
-   docker build -t qrcode-generator:X.X . 
-   ```
-> Remember to replace the version and image name if you want
+### Local Development (Optional)
 
-2. Run the container:
-   ```bash
-   docker run --env-file .env -p 8080:8080 qrcode-generator:X.X 
-   ```
+You can run the application outside Docker while keeping MinIO in Docker.
 
-> Remember to replace the .env file path to the path of your environment file that you created.
+#### 1️⃣ Start MinIO only
 
-### AWS S3 Configuration
+```bash
+docker compose up minio minio-init
+```
 
-1. Create an S3 bucket in your AWS account
-2. Update the `AWS_BUCKET_NAME` in your `.env` file or Docker run command
-3. Ensure your AWS credentials have appropriate permissions to access the S3 bucket
+#### 2️⃣ Run the application locally
+
+```bash
+./mvnw spring-boot:run
+```
+
+The application will connect to MinIO using the default configuration in `application.properties`.
+
+---
+
+## Configuration
+
+### Default (Local / MinIO)
+
+Configuration is handled via `application.properties` and environment variables.
+
+```properties
+aws.s3.region=us-east-1
+aws.s3.bucket-name=qrcode-bucket
+aws.s3.endpoint=http://localhost:9000
+aws.s3.access-key=minioadmin
+aws.s3.secret-key=minioadmin
+
+storage.public-base-url=http://localhost:9000/qrcode-bucket
+```
+
+### Running inside Docker
+
+When running via Docker Compose, these variables are overridden automatically:
+
+```yaml
+AWS_S3_ENDPOINT=http://minio:9000
+STORAGE_PUBLIC_BASE_URL=http://localhost:9000/qrcode-bucket
+```
+
+### Using AWS S3 (Optional)
+
+To use AWS S3 instead of MinIO:
+
+1. Remove `aws.s3.endpoint`
+2. Set AWS credentials via environment variables or IAM role
+3. Update the public base URL:
+
+```properties
+storage.public-base-url=https://your-bucket.s3.your-region.amazonaws.com
+```
+
+No code changes are required.
+
+---
+
+## Application Flow
+
+1. Client sends text to the API
+2. Application generates a QR Code PNG using ZXing
+3. The image is uploaded to an S3-compatible storage
+4. The API returns a public URL to access the QR Code
+
+---
 
 ## API Endpoints
 
-### POST /qrcode
-Generate a QR code from the provided text and store it in AWS S3. The QR code will be generated as a PNG image with dimensions of 200x200 pixels.
+### POST `/qrcode`
 
-**Parameters**
+Generate a QR Code from text and return its public URL.
 
-| Name | Required | Type | Description |
-|------|----------|------|-------------|
-| `text` | required | string | The text content to be encoded in the QR code. This can be any string value that you want to convert into a QR code. |
-
-**Response**
+#### Request Body
 
 ```json
 {
-    "url": "https://your-bucket.s3.your-region.amazonaws.com/random-uuid"
+  "text": "https://example.com"
 }
 ```
 
-**Error Response**
+#### Response
 
-If an error occurs during QR code generation or S3 upload, the API will return a 500 Internal Server Error.
+```json
+{
+  "url": "http://localhost:9000/qrcode-bucket/uuid.png"
+}
+```
 
-**Example Usage**
+#### Example Request
 
 ```bash
 curl -X POST http://localhost:8080/qrcode \
-     -H "Content-Type: application/json" \
-     -d '{"text": "https://example.com"}'
+  -H "Content-Type: application/json" \
+  -d '{"text":"Hello MinIO"}'
 ```
+
+---
+
+## Swagger (API Documentation)
+
+Swagger UI is available at:
+
+```
+http://localhost:8080/swagger-ui.html
+```
+
+---
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details. 
+This project is licensed under the MIT License.
+
+---
+
+### Final note (importante)
+
+Este projeto foi pensado como **ferramenta simples, portátil e fácil de subir**, priorizando:
+
+* baixo acoplamento com cloud providers
+* setup rápido via Docker
+* clareza arquitetural sem overengineering
+
+Se quiser, no próximo passo posso:
+
+* revisar o README em inglês técnico “enterprise”
+* ou simplificar ainda mais para um README estilo *tool / OSS*
